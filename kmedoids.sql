@@ -7,20 +7,20 @@
 -- Inicialmente, cria-se uma tabela que receberá as 4 variáveis representando
 -- as medidas das pétalas e das sépalas referente ao conjunto de dados do IRIS, 
 -- bem como uma ultima coluna contendo a classe em que cada tupla se encaixa.
-CREATE TABLE valoresTeoricos (
-	w DECIMAL,
-	x DECIMAL,
-	y DECIMAL,
-	z DECIMAL,
-	classe VARCHAR(45)
-);
+-- CREATE TABLE valoresTeoricos (
+-- 	w DECIMAL,
+-- 	x DECIMAL,
+-- 	y DECIMAL,
+-- 	z DECIMAL,
+-- 	classe VARCHAR(45)
+-- );
 
 CREATE TABLE valoresTeoricos(
-   w      NUMERIC(3,1) NOT NULL PRIMARY KEY 
-  ,x      NUMERIC(3,1) NOT NULL
-  ,y      NUMERIC(3,1) NOT NULL
-  ,z      NUMERIC(3,1) NOT NULL
-  ,classe VARCHAR(35) NOT NULL
+   w      NUMERIC(3,1) NOT NULL PRIMARY KEY ,
+   x      NUMERIC(3,1) NOT NULL,
+   y      NUMERIC(3,1) NOT NULL,
+   z      NUMERIC(3,1) NOT NULL,
+   classe VARCHAR(35) NOT NULL
 );
 INSERT INTO valoresTeoricos(w,x,y,z,classe) VALUES (5.1,3.5,1.4,0.2,'Iris-setosa');
 INSERT INTO valoresTeoricos(w,x,y,z,classe) VALUES (4.9,3.0,1.4,0.2,'Iris-setosa');
