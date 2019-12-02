@@ -1,0 +1,8 @@
+-- criar as tabelas do Banco de dados (grupo e dados)
+-- inserir os grupos
+-- inserir nos dados o arquivo "datasheetSemGrupo" clicando com botão direito do mouse
+em cima da tabela dados, e indo na opção import
+-- Selecionando medoids aleatorios
+-- Calculando distancia euclidiana para cada um
+-- Criando tabelas auxiliares
+-- Criando novo kmethoid com função
