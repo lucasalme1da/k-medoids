@@ -1,8 +1,16 @@
--- criar as tabelas do Banco de dados (grupo e dados)
+-- criar as tabelas do Banco de dados (grupo e dados) executar arquivo construÃ§Ã£oDoBancoParaTrabalho.sql
+
 -- inserir os grupos
--- inserir nos dados o arquivo "datasheetSemGrupo" clicando com botão direito do mouse
-em cima da tabela dados, e indo na opção import
+
+-- inserir nos dados o arquivo "datasheetSemGrupo" clicando com botï¿½o direito do mouse
+em cima da tabela dados, e indo na opï¿½ï¿½o import
+
 -- Selecionando medoids aleatorios
+
 -- Calculando distancia euclidiana para cada um
+
+
+
 -- Criando tabelas auxiliares
--- Criando novo kmethoid com função
+
+-- Criando novo kmethoid com funï¿½ï¿½o

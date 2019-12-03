@@ -12,5 +12,5 @@ create table grupo(
     grupo_id integer,
     grupo_nome text,
     grupo_k_methoid integer,
-    constraint pkGrupo primary key (grupo_id),
+    constraint pkGrupo primary key (grupo_id)
 );

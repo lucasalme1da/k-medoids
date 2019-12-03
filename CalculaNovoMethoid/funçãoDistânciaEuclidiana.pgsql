@@ -50,3 +50,5 @@ CREATE OR REPLACE FUNCTION calcular_distancia_euclidiana()
 		--RAISE NOTICE 'Quantidade de valores teoricos -> %', quantidade_valores_teoricos;
 	END;
 $$ language plpgsql;
+
+
