@@ -400,6 +400,7 @@ create or replace function calculaNovoKmethoid() returns text as $$
 	update medoids set y = Novomethoid.dados_eixo_y where medoids_id = 1;
 	update medoids set z = Novomethoid.dados_eixo_z where medoids_id= 1;
 
+	raise notice 'Novo medoid 1 -> % % % %',Novomethoid.dados_eixo_w,Novomethoid.dados_eixo_x,Novomethoid.dados_eixo_y,Novomethoid.dados_eixo_z;
 	---------------------------------------------------------------
 	------Selecionando novo methoid do grupo "IRIS-VERSICOLOR"------
 	select dados_eixo_w, dados_eixo_x,  dados_eixo_y,  dados_eixo_z into Novomethoid from iris_versicolor where distancia_paragrupo = 
@@ -410,6 +411,8 @@ create or replace function calculaNovoKmethoid() returns text as $$
 	update medoids set y = Novomethoid.dados_eixo_y where medoids_id = 2;
 	update medoids set z = Novomethoid.dados_eixo_z where medoids_id= 2;
 
+	raise notice 'Novo medoid 2 -> % % % %',Novomethoid.dados_eixo_w,Novomethoid.dados_eixo_x,Novomethoid.dados_eixo_y,Novomethoid.dados_eixo_z;
+
 	---------------------------------------------------------------------------------------------
 	------Selecionando novo methoid do grupo "IRIS-VIRGINICA"------
 	select dados_eixo_w, dados_eixo_x,  dados_eixo_y,  dados_eixo_z into Novomethoid from iris_virginica where distancia_paragrupo = 
@@ -419,6 +422,9 @@ create or replace function calculaNovoKmethoid() returns text as $$
 	update medoids set x = Novomethoid.dados_eixo_x where medoids_id = 3;
 	update medoids set y = Novomethoid.dados_eixo_y where medoids_id = 3;
 	update medoids set z = Novomethoid.dados_eixo_z where medoids_id= 3;
+
+	raise notice 'Novo medoid 3 -> % % % %',Novomethoid.dados_eixo_w,Novomethoid.dados_eixo_x,Novomethoid.dados_eixo_y,Novomethoid.dados_eixo_z;
+
 
 	drop table if exists iris_setosa;
 	drop table if exists iris_versicolor;
@@ -473,6 +479,9 @@ create or replace function algoritmoMedoid() returns text as $$
 
 		-- Seleciona a quantidade de medoids aleatórios e coloca na tabela medoids
 		perform selecionar_k_medoids_iniciais(numeroDeMedoids);
+
+		update dados set grupo_id = null;
+		update dados set grupo_id_anterior = null;
 
 		--Itera até o máximo de iterações ou até os grupos convergirem
 		for i in 1..numeroMaximoIteracoes loop
