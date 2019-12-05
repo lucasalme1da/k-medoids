@@ -8,7 +8,7 @@ Implementação do algoritmo de agrupamento em "K-Medoids" utilizando PL/pgSQL (
 
   - Escolher k medoids aleatórios entre os pontos( três pontos aleatórios serão escolhidos e chamados de medoids), pegar três pontos aleatóriamente no conjunto para serem os medoids.
 
- - Calcular a distância euclidiana para cada medoid para todos os outros pontos.
+ - Calcular a distância euclidiana de cada medoid para todos os outros pontos.
 
  - Para cada ponto, ver qual a distancia é menor entre o ponto e os k medoids, o ponto 
 fará parte do grupo do medoid que estiver mais próximo.
@@ -33,6 +33,6 @@ fará parte do grupo do medoid que estiver mais próximo.
 
 - Criar uma Query Tool no schema public, gerado automaticamente
 
-- Copiar todo o algoritmo do arquivo "alogoritmoKmedoidCompleto.sql" e colar na query
+- Copiar todo o algoritmo do arquivo "kmedoid.sql" e colar na query
 
 - Executar todo o código
