@@ -754,9 +754,32 @@ create or replace function algoritmoMedoid() returns text as $$
 	end
 $$ language plpgsql;
 
+<<<<<<< HEAD
 
 
 
+=======
+create or replace function normalizar() returns void as $$
+	declare 
+		xMin dados%ROWTYPE;
+		yMin dados%ROWTYPE;
+		wMin dados%ROWTYPE;
+		zMin dados%ROWTYPE;
+
+		xMax dados%ROWTYPE;
+		yMax dados%ROWTYPE;
+		wMax dados%ROWTYPE;
+		zMax dados%ROWTYPE;
+	
+	begin
+		select max(dados_eixo_x) into xMax from dados;
+		raise notice 'maximo x -> %',xMax;
+
+
+	end
+$$ language plpgsql;
+
+>>>>>>> master
 SELECT algoritmoMedoid();
 
 SELECT dados.grupo_id,
