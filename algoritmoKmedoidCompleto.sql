@@ -5,7 +5,7 @@ create table if not exists dados(
     dados_eixo_x NUMERIC(3,1),
     dados_eixo_y NUMERIC(3,1),
     dados_eixo_z NUMERIC(3,1),
-	classeOriginal VARCHAR(35), --->> Classe na qual ele pertence de acordo com datasheet original
+	classeOriginal VARCHAR(35), --->> Classe na qual ele pertence de acordo com dataset original
     grupo_id integer, --Grupo no qual vai pertencer após iterações 
 	grupo_id_anterior integer,
     CONSTRAINT pkDados PRIMARY KEY (dados_id)
@@ -212,7 +212,7 @@ create or replace function popularTabelas() returns void as $$
 $$ language plpgsql;
 
 
----->>>>>>>>>>>>>>>>>>>>>> Função que seleciona medoids iniciasi <<<<<<------------------------------
+---->>>>>>>>>>>>>>>>>>>>>> Função que seleciona medoids inicias <<<<<<------------------------------
 CREATE OR REPLACE FUNCTION selecionar_k_medoids_iniciais(k INTEGER)
 	RETURNS text AS $$
 	DECLARE
