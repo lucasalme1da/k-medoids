@@ -310,7 +310,7 @@ $$ language plpgsql;
 create or replace function calculaNovoKmethoid() returns text as $$ 
 	declare
 	quantidade integer;
-	distancia_paragrupoValor decimal default 0.0;
+	distancia_paragrupoValor decimal;
 	pontoInicial dados%rowtype;
 	pontoFinal dados%rowtype;
 	Novomethoid RECORD;
@@ -333,12 +333,12 @@ create or replace function calculaNovoKmethoid() returns text as $$
 	WHERE grupo_id = 3;
 	
 	alter table iris_setosa
-	add column distancia_paragrupo real;
+	add column distancia_paragrupo decimal;
 	
 	alter table iris_versicolor
-	add column distancia_paragrupo real;
+	add column distancia_paragrupo decimal;
 	
-	alter table iris_virginica add column distancia_paragrupo real;
+	alter table iris_virginica add column distancia_paragrupo decimal;
 	
 	alter table iris_setosa add column idi SERIAL, 
 	add constraint pkIrisSetosa primary key (idi);
@@ -384,17 +384,24 @@ create or replace function calculaNovoKmethoid() returns text as $$
 			distancia_paragrupoValor = (SQRT((pontoFinal.dados_eixo_w - pontoInicial.dados_eixo_w)^2 +
 			(pontoFinal.dados_eixo_x - pontoInicial.dados_eixo_x)^2 +
 			(pontoFinal.dados_eixo_y - pontoInicial.dados_eixo_y)^2 +
-			(pontoFinal.dados_eixo_z - pontoInicial.dados_eixo_z)^2) + distancia_paragrupoValor)/100
-			;
+			(pontoFinal.dados_eixo_z - pontoInicial.dados_eixo_z)^2) + distancia_paragrupoValor);
 			------------------------------------
-			
+			--if j = 1 then
+			--raise notice 'ponto final w x y z-> % % % % | ponto inicial w x y z -> % % % %',
+			--pontoFinal.dados_eixo_w,pontoFinal.dados_eixo_x,pontoFinal.dados_eixo_y,pontoFinal.dados_eixo_z,
+			--pontoInicial.dados_eixo_w,pontoInicial.dados_eixo_x,pontoInicial.dados_eixo_y,pontoInicial.dados_eixo_z;
+			--raise notice 'Distancia para o grupo -> %', distancia_paragrupoValor;
+			--end if;
 			
 		end loop;
 		--raise notice 'idi % valor %',i,distancia_paragrupoValor;
 		
 		---Colocando a distancia calculada na tabela----
 		UPDATE iris_setosa SET distancia_paragrupo = distancia_paragrupoValor
-		WHERE idi = i; distancia_paragrupoValor = 0.0; --Inicializando variável para cálculo da distancia do próximo elemento do grupo
+
+		WHERE idi = i; 
+		distancia_paragrupoValor = 0.0;
+
 
 	end loop;
 	
@@ -420,8 +427,7 @@ create or replace function calculaNovoKmethoid() returns text as $$
 			distancia_paragrupoValor = (SQRT((pontoFinal.dados_eixo_w - pontoInicial.dados_eixo_w)^2 +
 			(pontoFinal.dados_eixo_x - pontoInicial.dados_eixo_x)^2 +
 			(pontoFinal.dados_eixo_y - pontoInicial.dados_eixo_y)^2 +
-			(pontoFinal.dados_eixo_z - pontoInicial.dados_eixo_z)^2) + distancia_paragrupoValor)/100
-			;
+			(pontoFinal.dados_eixo_z - pontoInicial.dados_eixo_z)^2) + distancia_paragrupoValor);
 			--raise notice 'valor %', distancia_paragrupoValor;
 		end loop;
 
@@ -451,8 +457,7 @@ create or replace function calculaNovoKmethoid() returns text as $$
 			distancia_paragrupoValor = (SQRT((pontoFinal.dados_eixo_w - pontoInicial.dados_eixo_w)^2 + 
 			(pontoFinal.dados_eixo_x - pontoInicial.dados_eixo_x)^2 +
 			(pontoFinal.dados_eixo_y - pontoInicial.dados_eixo_y)^2 +
-			(pontoFinal.dados_eixo_z - pontoInicial.dados_eixo_z)^2) + distancia_paragrupoValor)/100
-			;
+			(pontoFinal.dados_eixo_z - pontoInicial.dados_eixo_z)^2) + distancia_paragrupoValor);
 			--raise notice 'valor %', distancia_paragrupoValor;
 		end loop;
 
@@ -539,13 +544,21 @@ create or replace function calculaNovoKmethoid() returns text as $$
 $$ language plpgsql;
 
 
-create or replace function defineGrupoIdAnterior() returns boolean as $$
+create or replace function defineGrupoIdAnterior(iteracao integer) returns boolean as $$
 	declare
 		quantidadeDados integer;
 		tuplaDados dados%ROWTYPE;
+		medoidAtual medoids%ROWTYPE;
+		medoidAnterior medoids%ROWTYPE;
+		distancia decimal;
 		valoresIguais integer := 0;
+		tolerancia decimal = 0.1;
+		quantidadeMedoidsSetosa integer;
+		quantidadeMedoidsVirginica integer;
+		quantidadeMedoidsVersicolor integer;
+
 	begin
-		
+
 		SELECT count(*) into quantidadeDados
 		FROM dados;
 
@@ -571,7 +584,76 @@ create or replace function defineGrupoIdAnterior() returns boolean as $$
 				UPDATE dados SET grupo_id_anterior = grupo_id
 				WHERE dados_id = i;
 			end loop;
+			
+			-- Checar se os medoids estão se repetindo
+			-- Se cada um se repetiu mais de 10 vezes parar o algoritmo
+			if iteracao <= 4 then
+
+				CREATE TABLE if not exists medoidsAnteriores (
+					w numeric(3,1),
+					x numeric(3,1),
+					y numeric(3,1),
+					z numeric(3,1),
+					medoids_id integer,
+					medoids_id_serial serial,
+					constraint pkMedoidsAnteriores primary key (medoids_id_serial)
+				);
+				
+				select * into medoidAtual from medoids where medoids_id = 1;
+				insert into medoidsAnteriores values(medoidAtual.w,medoidAtual.x,medoidAtual.y,medoidAtual.z,1);
+
+				select * into medoidAtual from medoids where medoids_id = 2;
+				insert into medoidsAnteriores values(medoidAtual.w,medoidAtual.x,medoidAtual.y,medoidAtual.z,2);
+
+				select * into medoidAtual from medoids where medoids_id = 3;
+				insert into medoidsAnteriores values(medoidAtual.w,medoidAtual.x,medoidAtual.y,medoidAtual.z,3);
+
+			else
+
+				select * into medoidAtual from medoids where medoids_id = 1;
+
+				SELECT count(*) into quantidadeMedoidsSetosa 
+				from medoidsAnteriores
+				where medoids_id = 1
+				and w = medoidAtual.w
+				and x = medoidAtual.x
+				and y = medoidAtual.y
+				and z = medoidAtual.z;
+
+				insert into medoidsAnteriores values(medoidAtual.w,medoidAtual.x,medoidAtual.y,medoidAtual.z,1);
+
+				select * into medoidAtual from medoids where medoids_id = 2;
+
+				SELECT count(*) into quantidadeMedoidsVirginica 
+				from medoidsAnteriores
+				where medoids_id = 2
+				and w = medoidAtual.w
+				and x = medoidAtual.x
+				and y = medoidAtual.y
+				and z = medoidAtual.z;
+
+				insert into medoidsAnteriores values(medoidAtual.w,medoidAtual.x,medoidAtual.y,medoidAtual.z,2);
+
+
+				select * into medoidAtual from medoids where medoids_id = 3;
+
+				SELECT count(*) into quantidadeMedoidsVersicolor
+				from medoidsAnteriores
+				where medoids_id = 3
+				and w = medoidAtual.w
+				and x = medoidAtual.x
+				and y = medoidAtual.y
+				and z = medoidAtual.z;
+
+				insert into medoidsAnteriores values(medoidAtual.w,medoidAtual.x,medoidAtual.y,medoidAtual.z,3);
+				--raise notice 'quantidades % % %', quantidadeMedoidsSetosa,quantidadeMedoidsVersicolor,quantidadeMedoidsVirginica;
+				if quantidadeMedoidsSetosa > 10 and quantidadeMedoidsVersicolor > 10 and quantidadeMedoidsVirginica > 10 then 
+					return true;
+				end if;
+			end if;
+
 			return false;
+
 		end if;
 
 	end
@@ -592,10 +674,14 @@ create or replace function algoritmoMedoid() returns text as $$
 		UPDATE dados SET grupo_id = null;
 		UPDATE dados SET grupo_id_anterior = null;
 
+		-- Pegar os medoids da iteração anterior e comparar com os dessa iteração 
+		-- Se for a primeira iteração não vai ter medoid anterior 
+
+
 		--Itera até o máximo de iterações ou até os grupos convergirem
 		for i in 1..numeroMaximoIteracoes loop
 	
-			SELECT defineGrupoIdAnterior() into condicaoDeParada;
+			SELECT defineGrupoIdAnterior(i) into condicaoDeParada;
 			-- Checa se os valores para grupo_id mudam, pois se mudarem a iteração para
 
 			if condicaoDeParada then
@@ -609,8 +695,12 @@ create or replace function algoritmoMedoid() returns text as $$
 				perform calculaNovoKmethoid();
 			end if;
 
-		end loop;
+			
 
+
+		end loop;
+		
+		drop table medoidsAnteriores;
 
 		return 'Medoids Definidos';
 
