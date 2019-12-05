@@ -302,15 +302,20 @@ create or replace function calculaNovoKmethoid() returns text as $$
 	Novomethoid RECORD;
 	begin
 
-	create table iris_setosa ASSELECT *
+	create table iris_setosa AS
+	SELECT *
 	FROM dados
 	WHERE grupo_id = 1;
 
-	create table iris_versicolor ASSELECT *
+	create table iris_versicolor AS
+	SELECT *
 	FROM dados
 	WHERE grupo_id = 2;
 
-	create table iris_virginica as select * from dados where grupo_id = 3;
+	create table iris_virginica AS
+	SELECT *
+	FROM dados
+	WHERE grupo_id = 3;
 	
 	alter table iris_setosa
 	add column distancia_paragrupo real;
@@ -523,10 +528,13 @@ create or replace function defineGrupoIdAnterior() returns boolean as $$
 		valoresIguais integer := 0;
 	begin
 		
-		select count(*) into quantidadeDados from dados;
+		SELECT count(*) into quantidadeDados
+		FROM dados;
 
 		for i in 1..quantidadeDados loop
-			select * into tuplaDados from dados where dados_id = i;
+			SELECT * into tuplaDados
+			FROM dados
+			WHERE dados_id = i;
 
 			if tuplaDados.grupo_id = tuplaDados.grupo_id_anterior and tuplaDados.grupo_id is not null then 
 				valoresIguais = valoresIguais + 1;
@@ -542,7 +550,8 @@ create or replace function defineGrupoIdAnterior() returns boolean as $$
 			valoresIguais = 0;
 
 			for i in 1..quantidadeDados loop
-				update dados set grupo_id_anterior = grupo_id where dados_id = i;
+				UPDATE dados SET grupo_id_anterior = grupo_id
+				WHERE dados_id = i;
 			end loop;
 			return false;
 		end if;
@@ -562,13 +571,13 @@ create or replace function algoritmoMedoid() returns text as $$
 		-- Seleciona a quantidade de medoids aleatórios e coloca na tabela medoids
 		perform selecionar_k_medoids_iniciais(numeroDeMedoids);
 
-		update dados set grupo_id = null;
-		update dados set grupo_id_anterior = null;
+		UPDATE dados SET grupo_id = null;
+		UPDATE dados SET grupo_id_anterior = null;
 
 		--Itera até o máximo de iterações ou até os grupos convergirem
 		for i in 1..numeroMaximoIteracoes loop
 	
-			select defineGrupoIdAnterior() into condicaoDeParada;
+			SELECT defineGrupoIdAnterior() into condicaoDeParada;
 			-- Checa se os valores para grupo_id mudam, pois se mudarem a iteração para
 
 			if condicaoDeParada then
