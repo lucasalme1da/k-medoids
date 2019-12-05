@@ -659,6 +659,53 @@ create or replace function defineGrupoIdAnterior(iteracao integer) returns boole
 	end
 $$ language plpgsql;
 
+create or replace function normalizar() returns void as $$
+	declare 
+		xMinn numeric(3,1);
+		yMin numeric(3,1);
+		wMin numeric(3,1);
+		zMin numeric(3,1);
+
+		xMaxx numeric(3,1);
+		yMax numeric(3,1);
+		wMax numeric(3,1);
+		zMax numeric(3,1);
+		
+		tuplaAtual dados%ROWTYPE;
+	
+		quantidade integer;
+	begin
+	
+		select count(*) into quantidade from dados;
+		select max(dados_eixo_w) into wMax from dados;
+		select max(dados_eixo_x) into xMaxx from dados;
+		select max(dados_eixo_y) into yMax from dados;
+		select max(dados_eixo_z) into zMax from dados;
+		
+		select min(dados_eixo_w) into wMin from dados;
+		select min(dados_eixo_x) into xMinn from dados;
+		select min(dados_eixo_y) into yMin from dados;
+		select min(dados_eixo_z) into zMin from dados;
+		
+		for i in 1..quantidade loop
+		
+			select * into tuplaAtual from dados where dados_id = i;
+			
+			update dados 
+			set dados_eixo_w = ((tuplaAtual.dados_eixo_w - wMin)/(wMax - wMin)),
+				dados_eixo_x = ((tuplaAtual.dados_eixo_x - xMinn)/(xMaxx - xMinn)),
+				dados_eixo_y = ((tuplaAtual.dados_eixo_y - yMin)/(yMax - yMin)),
+				dados_eixo_z = ((tuplaAtual.dados_eixo_z - zMin)/(zMax - zMin))
+			 where dados_id = i;
+		 	raise notice 'valor -> %',((tuplaAtual.dados_eixo_w - wMin)/(wMax - wMin));
+			raise notice 'tupla -> % %',i,tuplaAtual.dados_eixo_w;
+		end loop;
+		-- xAtual - xMin = G
+		-- xMax - xMin      
+	
+	end
+$$ language plpgsql;
+
 create or replace function algoritmoMedoid() returns text as $$
 	declare
 		numeroMaximoIteracoes integer := 50;
@@ -667,7 +714,7 @@ create or replace function algoritmoMedoid() returns text as $$
 	begin
 		-- Popula as tabelas de dados e grupos
 		perform popularTabelas();
-
+		perform normalizar();
 		-- Seleciona a quantidade de medoids aleatórios e coloca na tabela medoids
 		perform selecionar_k_medoids_iniciais(numeroDeMedoids);
 
@@ -706,6 +753,9 @@ create or replace function algoritmoMedoid() returns text as $$
 
 	end
 $$ language plpgsql;
+
+
+
 
 SELECT algoritmoMedoid();
 
