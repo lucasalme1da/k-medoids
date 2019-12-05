@@ -1,15 +1,22 @@
+---Tabela onde fica os dados a serem manipulados ------
 create table if not exists dados(
-    dados_id SERIAL,
+    dados_id SERIAL, --->> dados_id 1.....150
     dados_eixo_w NUMERIC(3,1),
     dados_eixo_x NUMERIC(3,1),
     dados_eixo_y NUMERIC(3,1),
     dados_eixo_z NUMERIC(3,1),
-	classeOriginal VARCHAR(35),
-    grupo_id integer, --Grupo no qual vai pertencer
+	classeOriginal VARCHAR(35), --->> Classe na qual ele pertence de acordo com datasheet original
+    grupo_id integer, --Grupo no qual vai pertencer após iterações 
 	grupo_id_anterior integer,
     CONSTRAINT pkDados PRIMARY KEY (dados_id)
 );
+-----------------------------------------------------
 
+---->> Grupo <<-----------
+--- ID = 1 > Iris-Setosa
+--- ID = 2 > Iris-versicolor
+--- ID = 3 > Iris-virginica
+--------------------------
 create table if NOT exists grupo(
     grupo_id integer,
     grupo_nome text,
@@ -30,6 +37,7 @@ CREATE TABLE if not exists medoids (
 
 ALTER SEQUENCE medoids_id_seq OWNED BY medoids.medoids_id;
 
+----Função que popula tabelas-------
 create or replace function popularTabelas() returns void as $$
 	declare
 		gruposQuantidade integer := 0;
@@ -203,6 +211,8 @@ create or replace function popularTabelas() returns void as $$
 	end;
 $$ language plpgsql;
 
+
+---->>>>>>>>>>>>>>>>>>>>>> Função que seleciona medoids iniciasi <<<<<<------------------------------
 CREATE OR REPLACE FUNCTION selecionar_k_medoids_iniciais(k INTEGER)
 	RETURNS text AS $$
 	DECLARE
@@ -222,7 +232,9 @@ CREATE OR REPLACE FUNCTION selecionar_k_medoids_iniciais(k INTEGER)
 		RETURN 'Executado com sucesso!';
 	END;
 $$ language plpgsql;
+-----------------------------------------------------------------------------------------------------------
 
+--------->>>>> Função que calcula distancia euclidiana <<<<----------------------------------------
 CREATE OR REPLACE FUNCTION calcular_distancia_euclidiana()
 	RETURNS text AS $$
 
@@ -290,10 +302,11 @@ CREATE OR REPLACE FUNCTION calcular_distancia_euclidiana()
 		--RAISE NOTICE 'Quantidade de valores teoricos -> %', quantidade_valores_teoricos;
 	END;
 $$ language plpgsql;
+-----------------------------------------------------------------------------------------
 
 --Função responsavel por calcular novo methoid
 --Os  raise notice disperso pelo código são para testar valor
--- Os valores estão divididos por 100 por um problema de overflow
+
 create or replace function calculaNovoKmethoid() returns text as $$ 
 	declare
 	quantidade integer;
@@ -303,6 +316,7 @@ create or replace function calculaNovoKmethoid() returns text as $$
 	Novomethoid RECORD;
 	begin
 
+	----->>> CRIANDO TABELAS AUXILIARES <<< -------------------
 	create table iris_setosa AS
 	SELECT *
 	FROM dados
@@ -384,8 +398,10 @@ create or replace function calculaNovoKmethoid() returns text as $$
 		
 		---Colocando a distancia calculada na tabela----
 		UPDATE iris_setosa SET distancia_paragrupo = distancia_paragrupoValor
+
 		WHERE idi = i; 
 		distancia_paragrupoValor = 0.0;
+
 
 	end loop;
 	
@@ -417,7 +433,7 @@ create or replace function calculaNovoKmethoid() returns text as $$
 
 		---Colocando a distancia calculada na tabela
 		UPDATE iris_versicolor SET distancia_paragrupo = distancia_paragrupoValor
-		WHERE idi = i; distancia_paragrupoValor = 0;
+		WHERE idi = i; distancia_paragrupoValor = 0;--Inicializando variável para cálculo da distancia do próximo elemento do grupo
 		
 	end loop;
 	-----------------------------------------------------------------------
@@ -447,7 +463,7 @@ create or replace function calculaNovoKmethoid() returns text as $$
 
 		---Colocando a distancia calculada na tabela
 		UPDATE iris_virginica SET distancia_paragrupo = distancia_paragrupoValor
-		WHERE idi = i; distancia_paragrupoValor = 0.0;
+		WHERE idi = i; distancia_paragrupoValor = 0.0;--Inicializando variável para cálculo da distancia do próximo elemento do grupo
 	end loop;
 	--------------------------------------------------------------------------------------
 	
@@ -470,6 +486,7 @@ create or replace function calculaNovoKmethoid() returns text as $$
 	UPDATE medoids SET z = Novomethoid.dados_eixo_z
 	WHERE medoids_id= 1;
 
+	--Verificando novos medoids
 	raise notice 'Novo medoid 1 -> % % % %',Novomethoid.dados_eixo_w,Novomethoid.dados_eixo_x,Novomethoid.dados_eixo_y,Novomethoid.dados_eixo_z;
 	---------------------------------------------------------------
 	------Selecionando novo methoid do grupo "IRIS-VERSICOLOR"------
@@ -491,6 +508,7 @@ create or replace function calculaNovoKmethoid() returns text as $$
 	UPDATE medoids SET z = Novomethoid.dados_eixo_z
 	WHERE medoids_id= 2;
 
+	--Verificando novos medoids
 	raise notice 'Novo medoid 2 -> % % % %',Novomethoid.dados_eixo_w,Novomethoid.dados_eixo_x,Novomethoid.dados_eixo_y,Novomethoid.dados_eixo_z;
 
 	---------------------------------------------------------------------------------------------
@@ -513,9 +531,10 @@ create or replace function calculaNovoKmethoid() returns text as $$
 	UPDATE medoids SET z = Novomethoid.dados_eixo_z
 	WHERE medoids_id= 3;
 
+	--Verificando novos medoids
 	raise notice 'Novo medoid 3 -> % % % %',Novomethoid.dados_eixo_w,Novomethoid.dados_eixo_x,Novomethoid.dados_eixo_y,Novomethoid.dados_eixo_z;
 
-
+	--->> Excluindo tabelas auxiliares <<--------------
 	drop table if EXISTS iris_setosa; 
 	drop table if EXISTS iris_versicolor; 
 	drop table if EXISTS iris_virginica;
