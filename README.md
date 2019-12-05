@@ -3,9 +3,7 @@ Implementação do algoritmo de agrupamento em "K-Medoids" utilizando PL/pgSQL (
 --
 # Tabelas
 
-![](/modelo.PNG)
-
-<img src="/modelo.PNG">
+<img align="center" src="/modelo.PNG" >
 
 # Primeiro passo 
   
