@@ -10,7 +10,7 @@ create table if not exists dados(
     CONSTRAINT pkDados PRIMARY KEY (dados_id)
 );
 
-create table if not exists grupo(
+create table if NOT exists grupo(
     grupo_id integer,
     grupo_nome text,
     grupo_k_methoid integer,
@@ -35,8 +35,11 @@ create or replace function popularTabelas() returns void as $$
 		gruposQuantidade integer := 0;
 		dadosQuantidade integer := 0;
 	begin
-		select count(*) from grupo into gruposQuantidade;
-		select count(*) from dados into dadosQuantidade;
+		SELECT count(*)
+		FROM grupo into gruposQuantidade;
+		
+		SELECT count(*)
+		FROM dados into dadosQuantidade;
 
 		if gruposQuantidade = 0 then
 			insert into grupo values(1,'iris_setosa',null);
@@ -210,7 +213,11 @@ CREATE OR REPLACE FUNCTION selecionar_k_medoids_iniciais(k INTEGER)
 		DELETE FROM medoids; -- Limpa a tabela de medoids atuais
 		ALTER SEQUENCE medoids_id_seq RESTART WITH 1;
 		-- Insere w,x,y,z da tabela valoresTeoricos k vezes na tabela medoids:
-      	INSERT INTO medoids SELECT dados_eixo_w, dados_eixo_x, dados_eixo_y, dados_eixo_z FROM dados OFFSET floor(random()*N) LIMIT k;
+      	INSERT INTO medoidsSELECT dados_eixo_w,
+         dados_eixo_x,
+         dados_eixo_y,
+         dados_eixo_z
+		FROM dados OFFSET floor(random()*N) LIMIT k;
 		RETURN 'Executado com sucesso!';
 	END;
 $$ language plpgsql;
@@ -232,18 +239,26 @@ CREATE OR REPLACE FUNCTION calcular_distancia_euclidiana()
 	
 	BEGIN
 		-- Contando numero de tuplas em 'dados'
-		SELECT count(dados_id) INTO quantidade FROM dados;
+		SELECT count(dados_id) INTO quantidade
+		FROM dados;
+
 		-- Contando numero de medoids em 'medoids'
-		SELECT count(w) INTO quantidade_medoids FROM medoids;
+		SELECT count(w) INTO quantidade_medoids
+		FROM medoids;
 
 		--LOOP EXTERNO PERCORRE TODOS DADOS 
 		FOR i IN 1..quantidade LOOP
 			--PEGANDO VALORES DOS DADOS
-			SELECT * into tuplaDADOS from dados where dados_id = i;
+			SELECT * into tuplaDADOS
+			FROM dados
+			WHERE dados_id = i;
+
 			--LOOP SOBRE OS METHOIDS
 			FOR j IN 1..quantidade_medoids LOOP
 				
-				SELECT * into tuplaMETHOID from medoids where medoids_id = j;			
+				SELECT * into tuplaMETHOID
+				FROM medoids
+				WHERE medoids_id = j;			
 
 				valor_distancia = SQRT(POWER(tuplaMETHOID.w - tuplaDADOS.dados_eixo_w,2) + POWER(tuplaMETHOID.x - tuplaDADOS.dados_eixo_x,2) + POWER(tuplaMETHOID.y - tuplaDADOS.dados_eixo_y,2) + POWER(tuplaMETHOID.z - tuplaDADOS.dados_eixo_z,2));
 				--raise notice 'VALOR DISTANCIA % -> %', j,valor_distancia;
@@ -251,13 +266,19 @@ CREATE OR REPLACE FUNCTION calcular_distancia_euclidiana()
 				-- VERIFICANDO QUAL METHOIDS VAI CONQUISTAR O DADO
 				if (menor_distancia = 0.0)then
 					menor_distancia = valor_distancia;
-					update dados set grupo_id = j where dados_id = i;
+
+					UPDATE dados SET grupo_id = j
+					WHERE dados_id = i;
+
 					CONTINUE;
 				end if;
 				
 				if (valor_distancia < menor_distancia)then
 					menor_distancia = valor_distancia;
-					update dados set grupo_id = j where dados_id = i;
+
+					UPDATE dados SET grupo_id = j
+					WHERE dados_id = i;
+
 					--raise notice 'grupo -> %',j;
 				end if;
 
@@ -281,49 +302,62 @@ create or replace function calculaNovoKmethoid() returns text as $$
 	Novomethoid RECORD;
 	begin
 
-	create table iris_setosa as select * from dados where grupo_id = 1;
-	create table iris_versicolor as select * from dados where grupo_id = 2;
+	create table iris_setosa ASSELECT *
+	FROM dados
+	WHERE grupo_id = 1;
+
+	create table iris_versicolor ASSELECT *
+	FROM dados
+	WHERE grupo_id = 2;
+
 	create table iris_virginica as select * from dados where grupo_id = 3;
+	
 	alter table iris_setosa
 	add column distancia_paragrupo real;
 	
 	alter table iris_versicolor
 	add column distancia_paragrupo real;
 	
-	alter table iris_virginica
-	add column distancia_paragrupo real;
+	alter table iris_virginica add column distancia_paragrupo real;
 	
-	alter table iris_setosa
-	add column idi SERIAL, add constraint pkIrisSetosa primary key (idi);
+	alter table iris_setosa add column idi SERIAL, 
+	add constraint pkIrisSetosa primary key (idi);
 	
-	alter table iris_versicolor
-	add column idi SERIAL, add constraint pkIrisVersiColor primary key (idi);
+	alter table iris_versicolor add column idi SERIAL, 
+	add constraint pkIrisVersiColor primary key (idi);
 	
-	alter table iris_virginica
-	add column idi SERIAL, add constraint pkIrisVirginica primary key (idi);
+	alter table iris_virginica add column idi SERIAL, 
+	add constraint pkIrisVirginica primary key (idi);
 
-	update iris_setosa set distancia_paragrupo = 0.0;
+	UPDATE iris_setosa SET distancia_paragrupo = 0.0;
 
-	update iris_versicolor set distancia_paragrupo = 0.0;
+	UPDATE iris_versicolor SET distancia_paragrupo = 0.0;
 
-	update iris_virginica set distancia_paragrupo = 0.0;
+	UPDATE iris_virginica SET distancia_paragrupo = 0.0;
     
 
 	---------------------> Iris-Setosa <------------------
 	--Selecionando quantidade de tuplas para fazer o LOOP
-	select count(idi) into quantidade from iris_setosa;
+	SELECT count(idi) into quantidade
+	FROM iris_setosa;
 	--raise notice 'quantidade %',quantidade;
 	
 	for i in 1..quantidade loop
 		--raise notice 'idi % ',i;
 		
-		select * into pontoInicial from iris_setosa where idi = i;
+		SELECT * into pontoInicial
+		FROM iris_setosa
+		WHERE idi = i;
+		
 		--raise notice 'pontoInicial %', pontoInicial;
 	
 		for j in 1..quantidade loop
 			--raise notice 'j %', j;
 			
-			select * into pontoFinal from iris_setosa where idi = j;
+			SELECT * into pontoFinal
+			FROM iris_setosa
+			WHERE idi = j;
+
 			--raise notice 'valor %', pontoFinal.dados_eixo_w;
 
 			-- Calculando distancia 
@@ -337,22 +371,31 @@ create or replace function calculaNovoKmethoid() returns text as $$
 			
 		end loop;
 		--raise notice 'idi % valor %',i,distancia_paragrupoValor;
+		
 		---Colocando a distancia calculada na tabela----
-		update iris_setosa set distancia_paragrupo = distancia_paragrupoValor where idi = i;
-		distancia_paragrupoValor = 0.0;
+		UPDATE iris_setosa SET distancia_paragrupo = distancia_paragrupoValor
+		WHERE idi = i; distancia_paragrupoValor = 0.0;
+
 	end loop;
 	
 	-----------------------> Iris-versicolor <------------------------------------
-	select count(idi) into quantidade from iris_versicolor;
+	SELECT count(idi) into quantidade
+	FROM iris_versicolor;
 	
 	for i in 1..quantidade loop
 
-		select * into pontoInicial from iris_versicolor where idi = i;
+		SELECT * into pontoInicial
+		FROM iris_versicolor
+		WHERE idi = i;
+
 		--raise notice 'pontoInicial %', pontoInicial;
 
 		--Iterando sobre o grupo
 		for j in 1..quantidade loop
-			select * into pontoFinal from iris_versicolor where idi = j;
+			SELECT * into pontoFinal
+			FROM iris_versicolor
+			WHERE idi = j;
+
 			--raise notice 'valor %', pontoFinal.dados_eixo_w;
 			distancia_paragrupoValor = (SQRT((pontoFinal.dados_eixo_w - pontoInicial.dados_eixo_w)^2 +
 			(pontoFinal.dados_eixo_x - pontoInicial.dados_eixo_x)^2 +
@@ -363,20 +406,27 @@ create or replace function calculaNovoKmethoid() returns text as $$
 		end loop;
 
 		---Colocando a distancia calculada na tabela
-		update iris_versicolor set distancia_paragrupo = distancia_paragrupoValor where idi = i;
-		distancia_paragrupoValor = 0;
+		UPDATE iris_versicolor SET distancia_paragrupo = distancia_paragrupoValor
+		WHERE idi = i; distancia_paragrupoValor = 0;
 		
 	end loop;
 	-----------------------------------------------------------------------
 	
 	----------------------> Iris-virginica <---------------------------------------
-	select count(idi) into quantidade from iris_virginica;
+	SELECT count(idi) into quantidade
+	FROM iris_virginica;
 	
 	for i in 1..quantidade loop
-		select * into pontoInicial from iris_virginica where idi = i;
+		SELECT * into pontoInicial
+		FROM iris_virginica
+		WHERE idi = i;
+
 		--raise notice 'pontoInicial %', pontoInicial;
 		for j in 1..quantidade loop
-			select * into pontoFinal from iris_virginica where idi = j;
+			SELECT * into pontoFinal
+			FROM iris_virginica
+			WHERE idi = j;
+
 			--raise notice 'valor %', pontoFinal.dados_eixo_w;
 			distancia_paragrupoValor = (SQRT((pontoFinal.dados_eixo_w - pontoInicial.dados_eixo_w)^2 + 
 			(pontoFinal.dados_eixo_x - pontoInicial.dados_eixo_x)^2 +
@@ -385,50 +435,81 @@ create or replace function calculaNovoKmethoid() returns text as $$
 			;
 			--raise notice 'valor %', distancia_paragrupoValor;
 		end loop;
+
 		---Colocando a distancia calculada na tabela
-		update iris_virginica set distancia_paragrupo = distancia_paragrupoValor where idi = i;
-		distancia_paragrupoValor = 0.0;
+		UPDATE iris_virginica SET distancia_paragrupo = distancia_paragrupoValor
+		WHERE idi = i; distancia_paragrupoValor = 0.0;
 	end loop;
 	--------------------------------------------------------------------------------------
 	
 	------Selecionando novo methoid do grupo "IRIS-SETOSA"------
-	select dados_eixo_w, dados_eixo_x,  dados_eixo_y,  dados_eixo_z into Novomethoid from iris_setosa where distancia_paragrupo = 
-	(select min(distancia_paragrupo) from iris_setosa);
+	SELECT dados_eixo_w,
+         dados_eixo_x,
+         dados_eixo_y,
+         dados_eixo_z into Novomethoid
+	FROM iris_setosa
+	WHERE distancia_paragrupo = 
+    	(SELECT min(distancia_paragrupo)
+    FROM iris_setosa);
 	
-	update medoids set w = Novomethoid.dados_eixo_w where medoids_id = 1;
-	update medoids set x = Novomethoid.dados_eixo_x where medoids_id = 1;
-	update medoids set y = Novomethoid.dados_eixo_y where medoids_id = 1;
-	update medoids set z = Novomethoid.dados_eixo_z where medoids_id= 1;
+	UPDATE medoids SET w = Novomethoid.dados_eixo_w
+	WHERE medoids_id = 1;
+	UPDATE medoids SET x = Novomethoid.dados_eixo_x
+	WHERE medoids_id = 1;
+	UPDATE medoids SET y = Novomethoid.dados_eixo_y
+	WHERE medoids_id = 1;
+	UPDATE medoids SET z = Novomethoid.dados_eixo_z
+	WHERE medoids_id= 1;
 
 	raise notice 'Novo medoid 1 -> % % % %',Novomethoid.dados_eixo_w,Novomethoid.dados_eixo_x,Novomethoid.dados_eixo_y,Novomethoid.dados_eixo_z;
 	---------------------------------------------------------------
 	------Selecionando novo methoid do grupo "IRIS-VERSICOLOR"------
-	select dados_eixo_w, dados_eixo_x,  dados_eixo_y,  dados_eixo_z into Novomethoid from iris_versicolor where distancia_paragrupo = 
-	(select min(distancia_paragrupo) from iris_versicolor);
+	SELECT dados_eixo_w,
+         dados_eixo_x,
+         dados_eixo_y,
+         dados_eixo_z into Novomethoid
+	FROM iris_versicolor
+	WHERE distancia_paragrupo = 
+    	(SELECT min(distancia_paragrupo)
+    FROM iris_versicolor);
 	
-	update medoids set w = Novomethoid.dados_eixo_w where medoids_id = 2;
-	update medoids set x = Novomethoid.dados_eixo_x where medoids_id = 2;
-	update medoids set y = Novomethoid.dados_eixo_y where medoids_id = 2;
-	update medoids set z = Novomethoid.dados_eixo_z where medoids_id= 2;
+	UPDATE medoids SET w = Novomethoid.dados_eixo_w
+	WHERE medoids_id = 2;
+	UPDATE medoids SET x = Novomethoid.dados_eixo_x
+	WHERE medoids_id = 2;
+	UPDATE medoids SET y = Novomethoid.dados_eixo_y
+	WHERE medoids_id = 2;
+	UPDATE medoids SET z = Novomethoid.dados_eixo_z
+	WHERE medoids_id= 2;
 
 	raise notice 'Novo medoid 2 -> % % % %',Novomethoid.dados_eixo_w,Novomethoid.dados_eixo_x,Novomethoid.dados_eixo_y,Novomethoid.dados_eixo_z;
 
 	---------------------------------------------------------------------------------------------
 	------Selecionando novo methoid do grupo "IRIS-VIRGINICA"------
-	select dados_eixo_w, dados_eixo_x,  dados_eixo_y,  dados_eixo_z into Novomethoid from iris_virginica where distancia_paragrupo = 
-	(select min(distancia_paragrupo) from iris_virginica);
+	SELECT dados_eixo_w,
+         dados_eixo_x,
+         dados_eixo_y,
+         dados_eixo_z into Novomethoid
+	FROM iris_virginica
+	WHERE distancia_paragrupo = 
+    	(SELECT min(distancia_paragrupo)
+    FROM iris_virginica);
 	
-	update medoids set w = Novomethoid.dados_eixo_w where medoids_id = 3;
-	update medoids set x = Novomethoid.dados_eixo_x where medoids_id = 3;
-	update medoids set y = Novomethoid.dados_eixo_y where medoids_id = 3;
-	update medoids set z = Novomethoid.dados_eixo_z where medoids_id= 3;
+	UPDATE medoids SET w = Novomethoid.dados_eixo_w
+	WHERE medoids_id = 3;
+	UPDATE medoids SET x = Novomethoid.dados_eixo_x
+	WHERE medoids_id = 3;
+	UPDATE medoids SET y = Novomethoid.dados_eixo_y
+	WHERE medoids_id = 3;
+	UPDATE medoids SET z = Novomethoid.dados_eixo_z
+	WHERE medoids_id= 3;
 
 	raise notice 'Novo medoid 3 -> % % % %',Novomethoid.dados_eixo_w,Novomethoid.dados_eixo_x,Novomethoid.dados_eixo_y,Novomethoid.dados_eixo_z;
 
 
-	drop table if exists iris_setosa;
-	drop table if exists iris_versicolor;
-	drop table if exists iris_virginica;
+	drop table if EXISTS iris_setosa; 
+	drop table if EXISTS iris_versicolor; 
+	drop table if EXISTS iris_virginica;
 
 	return 'Executado com sucesso';
 	end
@@ -454,6 +535,7 @@ create or replace function defineGrupoIdAnterior() returns boolean as $$
 		end loop;
 
 		raise notice 'valores iguais %, quantidade %',valoresIguais,quantidadeDados;
+
 		if valoresIguais = quantidadeDados then 
 			return true;
 		else 
@@ -500,7 +582,6 @@ create or replace function algoritmoMedoid() returns text as $$
 				perform calculaNovoKmethoid();
 			end if;
 
-
 		end loop;
 
 
@@ -509,6 +590,11 @@ create or replace function algoritmoMedoid() returns text as $$
 	end
 $$ language plpgsql;
 
-select algoritmoMedoid();
+SELECT algoritmoMedoid();
 
-select dados.grupo_id,classeoriginal,grupo_nome from dados,grupo where dados.grupo_id = grupo.grupo_id order by dados.grupo_id asc;
+SELECT dados.grupo_id,
+        classeoriginal,
+        grupo_nome
+FROM dados,grupo
+WHERE dados.grupo_id = grupo.grupo_id
+ORDER BY  dados.grupo_id asc;
