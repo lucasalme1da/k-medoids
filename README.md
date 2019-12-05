@@ -26,3 +26,13 @@ fará parte do grupo do medoid que estiver mais próximo.
 - Refazer o processo do primeiro passo mas desta vez com os medoids definidos, parar a iteração quando os pontos não mudarem mais de grupo, ou então parar com um número máximo de iterações.
 
 - Para verificar se o algoritmo funcionou, os grupos tem que estar separados da mesma maneira que o arquivo original.
+
+# Execução do Algoritmo
+
+- Criar um database no PostgresSQL
+
+- Criar uma Query Tool no schema public, gerado automaticamente
+
+- Copiar todo o algoritmo do arquivo "alogoritmoKmedoidCompleto.sql" e colar na query
+
+- Executar todo o código
