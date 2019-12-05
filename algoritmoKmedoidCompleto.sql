@@ -213,7 +213,8 @@ CREATE OR REPLACE FUNCTION selecionar_k_medoids_iniciais(k INTEGER)
 		DELETE FROM medoids; -- Limpa a tabela de medoids atuais
 		ALTER SEQUENCE medoids_id_seq RESTART WITH 1;
 		-- Insere w,x,y,z da tabela valoresTeoricos k vezes na tabela medoids:
-      	INSERT INTO medoidsSELECT dados_eixo_w,
+      	INSERT INTO medoids 
+		SELECT dados_eixo_w,
          dados_eixo_x,
          dados_eixo_y,
          dados_eixo_z
