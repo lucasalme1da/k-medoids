@@ -1,6 +1,11 @@
 # k-medoids
 Implementação do algoritmo de agrupamento em "K-Medoids" utilizando PL/pgSQL (PostgreSQL)
 --
+# Tabelas
+
+![](/modelo.PNG)
+
+<img src="/modelo.PNG">
 
 # Primeiro passo 
   
@@ -36,3 +41,5 @@ fará parte do grupo do medoid que estiver mais próximo.
 - Copiar todo o algoritmo do arquivo "kmedoid.sql" e colar na query
 
 - Executar todo o código
+
+
